@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.newsEconomy.Mapper.NewsMapper"> <!-- Mapper의 메소드가 담긴 파일의 경로입니다. -->
+    <!-- NewsDAOImpl 에서 newsMapper.listPaging(cri) 한 곳 입니다. NewsVO List를 가져와서 반환합니다. -->
+    <select id="listPaging" resultType="com.newsEconomy.domain.NewsVO" parameterType ="com.newsEconomy.domain.Criteria">
+        select *
+        from nwj.newsData
+        where id between #{rowStart} and #{rowEnd};
+    </select>
+    <select id ="listCount" resultType ="int">
+        select count(id)
+        from nwj.newsData;
+    </select>
+    <select id="searchList" resultType="com.newsEconomy.domain.NewsVO" parameterType="com.newsEconomy.domain.SearchCriteria">
+        SELECT *
+        FROM (select *, @rownum := @rownum+1 as rownum
+        from newsdata,(select @rownum:=0) as r
+        where 1=1 and <if test='searchType.equals("Title")'>title LIKE CONCAT( '%', #{keyword}, '%')</if>
+        <if test='searchType.equals("Content")'> content LIKE CONCAT('%', #{keyword}, '%') </if>
+        )search
+        where search.rownum between #{rowStart} and #{rowEnd}
+        ORDER BY id DESC
+        <!-- from 에는 조건에 따른 rownum을 생성한 테이블을 가져오기 위해 인라인 뷰를 만들어서 가져왔습니다. -->
+        <!-- if test는 parameter로 받아온 scri 안의 searchType를 조사하여 Title일시 title like '%검색내용%'를 수행합니다. -->
+    </select>
+
+    <select id="searchListCount" parameterType="com.newsEconomy.domain.SearchCriteria" resultType="int">
+        SELECT COUNT(id)
+        FROM nwj.newsData
+        WHERE 1=1
+            AND
+        <if test='searchType.equals("Title")'> title LIKE  CONCAT('%', #{keyword}, '%') </if>
+        <if test='searchType.equals("Content")'> content LIKE CONCAT('%', #{keyword}, '%') </if>
+
+    </select>
+
+</mapper>
